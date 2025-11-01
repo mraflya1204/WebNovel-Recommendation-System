@@ -37,15 +37,17 @@ def main():
                             title = row[2].strip()
                             genreString = row[6].strip()
                             tagString = row[7].strip()
-                            author = row[14].strip()
+                            authorString = row[14].strip()
+                            associatedWorksString = row[9].strip()
                             
                             if title:
                                 session.execute_write(
                                     createRelationships, 
                                     title, 
-                                    author, 
+                                    authorString, 
                                     genreString, 
-                                    tagString
+                                    tagString,
+                                    associatedWorksString
                                 )
                                 count += 1
                                 if count % 100 == 0:
