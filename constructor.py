@@ -26,19 +26,29 @@ def main():
                     reader = csv.reader(file)
                     
                     try:
-                        next(reader)
+                        next(reader) 
                     except StopIteration:
                         print("CSV file is empty.")
                         return
                         
                     count = 0
                     for row in reader:
-                        if len(row) > 14:
+                        if len(row) > 0: 
                             title = row[2].strip()
                             genreString = row[6].strip()
                             tagString = row[7].strip()
                             authorString = row[14].strip()
                             associatedWorksString = row[9].strip()
+                            descriptionString = row[8].strip()
+                            languageString = row[13].strip()
+                            yearString = row[16].strip() # Example: Is it column 15?
+
+
+                            statusString = row[17].strip()
+                            licensedString = row[18].strip()
+                            translatedString = row[19].strip()
+                            publisherString = row[20].strip()
+                            linkString = row[1].strip()
                             
                             if title:
                                 session.execute_write(
@@ -47,7 +57,15 @@ def main():
                                     authorString, 
                                     genreString, 
                                     tagString,
-                                    associatedWorksString
+                                    associatedWorksString,
+                                    descriptionString,
+                                    languageString,
+                                    yearString,
+                                    statusString,
+                                    licensedString,
+                                    translatedString,
+                                    publisherString,
+                                    linkString
                                 )
                                 count += 1
                                 if count % 100 == 0:
