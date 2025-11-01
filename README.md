@@ -26,3 +26,8 @@ Steps:
 - Run `constructor.py` to initialize the database. It will take a while as there is ~11k rows of Novel information
 - After finishing, you can see your instance for the result
 - Use `CLI.py` for playground
+
+## Samples
+![RelatedWorks](https://github.com/user-attachments/assets/1e889b6c-6574-4c67-8ce5-b77da7c27c30)
+
+![RecommendedTags](https://github.com/user-attachments/assets/bc53fad8-deee-4faf-8e9b-7bd57b798a37)
