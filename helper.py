@@ -12,7 +12,7 @@ def parseAssociatedWorks(s):
     try:
         titles = re.findall(r"'title':\s*'((?:\\'|[^'])*)'", s)
         
-        return [title.strip() for title in titles]
+        return [title.replace("\\'", "'").strip() for title in titles]
     
     except Exception as e:
         print(f"Warning: Could not parse associated works with regex: {s} | Error: {e}")
@@ -34,7 +34,7 @@ def parseStringList(s):
         print(f"Warning: Could not parse string list: {s}")
         return []
 
-def createRelationships(tx, title, authorString, genreString, tagString, associatedWorksString):
+def createRelationships(tx, title, authorString, genreString, tagString, associatedWorksString, descriptionString, languageString, yearString, statusString, licensedString, translatedString, publisherString, linkString):
     genreList = parseStringList(genreString)
     tagList = parseStringList(tagString)
     authorList = parseStringList(authorString) 
@@ -42,6 +42,24 @@ def createRelationships(tx, title, authorString, genreString, tagString, associa
     
     query = """
     MERGE (n:Novel {name: $title})
+    ON CREATE SET
+        n.description = $descriptionString,
+        n.language = $languageString,
+        n.year = $yearString,
+        n.status = $statusString,
+        n.licensed = $licensedString,
+        n.translated = $translatedString,
+        n.publisher = $publisherString,
+        n.link = 'https://www.novelupdates.com/series/' + $linkString
+    ON MATCH SET
+        n.description = $descriptionString,
+        n.language = $languageString,
+        n.year = $yearString,
+        n.status = $statusString,
+        n.licensed = $licensedString,
+        n.translated = $translatedString,
+        n.publisher = $publisherString,
+        n.link = 'https://www.novelupdates.com/series/' + $linkString
     
     FOREACH (authorName IN $authorList |
         MERGE (a:Author {name: authorName})
@@ -62,14 +80,22 @@ def createRelationships(tx, title, authorString, genreString, tagString, associa
         MERGE (aw:Novel {name: workTitle})
         MERGE (n)-[:AssociatedWith]->(aw)
     )
-    
+
     RETURN n.name
     """
-
+    
     tx.run(query, 
            title=title, 
            authorList=authorList,  
            genreList=genreList, 
            tagList=tagList,
-           associatedWorks=associatedWorks
+           associatedWorks=associatedWorks,
+           descriptionString=descriptionString,
+           languageString=languageString,
+           yearString=yearString,
+           statusString=statusString,
+           licensedString=licensedString,
+           translatedString=translatedString,
+           publisherString=publisherString,
+           linkString=linkString 
     )
