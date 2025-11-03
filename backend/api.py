@@ -1,5 +1,3 @@
-# File location: backend/api.py
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from neo4j import GraphDatabase
@@ -55,9 +53,11 @@ def home():
 
 @app.route("/api/search/title/<string:title_search>")
 def api_search_by_title(title_search):
-    """API for searching novels by title (partial match)."""
+    """API for searching novels by title (case-insensitive partial match)."""
+    
     query = """
-    MATCH (n:Novel) WHERE n.name CONTAINS $title
+    MATCH (n:Novel) 
+    WHERE toLower(n.name) CONTAINS toLower($title)
     RETURN DISTINCT n.name AS title, n.year AS year, n.language AS language
     LIMIT 10
     """
@@ -85,6 +85,25 @@ def api_search_by_genre(genre_input):
         return jsonify(results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/search/tag/<string:tag_input>")
+def api_search_by_tag(tag_input):
+    """API for searching novels by tag (separated by ';')."""
+    tag_list = [t.strip() for t in tag_input.split(';') if t.strip()]
+    if not tag_list:
+        return jsonify({"error": "Tag list cannot be empty"}), 400
+        
+    query = """
+    MATCH (n:Novel)
+    WHERE ALL(t_name IN $tag_list WHERE (n)-[:HasTag]->(:Tag {name: t_name}))
+    RETURN n.name AS title, n.year AS year, n.language AS language
+    LIMIT 10
+    """
+    try:
+        results = _run_query(query, {"tag_list": tag_list})
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Endpoint 3: Recommendation by Author
 @app.route("/api/recommend/author/<string:title>")
@@ -93,7 +112,7 @@ def api_find_by_author(title):
     query = """
     MATCH (n1:Novel {name: $title})-[:WrittenBy]->(a:Author)<-[:WrittenBy]-(n2:Novel)
     WHERE n1 <> n2
-    RETURN DISTINCT n2.name AS recommendation, a.name AS reason
+    RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
     LIMIT 10
     """
     try:
@@ -105,16 +124,14 @@ def api_find_by_author(title):
 # Endpoint 4: Recommendation by Similar Genre
 @app.route("/api/recommend/genre/<string:title>")
 def api_find_by_genre(title):
-    """API: Get recommendations based on novel title -> similar genres (min 2)."""
+    """API: Get recommendations based on novel title -> similar genres (min 4)."""
     query = """
     MATCH (n1:Novel {name: $title})-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
     WHERE n1 <> n2
     WITH n2, count(g) AS sharedFeatures
-    WHERE sharedFeatures >= 2
-    RETURN DISTINCT n2.name AS recommendation, 
-            'Shared ' + toString(sharedFeatures) + ' genres' AS reason, 
-            sharedFeatures
-    ORDER BY sharedFeatures DESC LIMIT 10
+    WHERE sharedFeatures >= 4
+    RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+    LIMIT 10
     """
     try:
         results = _run_query(query, {"title": title})
@@ -122,6 +139,40 @@ def api_find_by_genre(title):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Endpoint 5: Recommendation by Similar Tags
+@app.route("/api/recommend/tag/<string:title>")
+def api_find_by_tags(title):
+    """API: Get recommendations based on novel title -> similar tags (min 10)."""
+    query = """
+    MATCH (n1:Novel {name: $title})-[:HasTag]->(t:Tag)<-[:HasTag]-(n2:Novel)
+    WHERE n1 <> n2
+    WITH n2, count(t) AS sharedFeatures
+    WHERE sharedFeatures >= 10
+    RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+    LIMIT 10
+    """
+    try:
+        results = _run_query(query, {"title": title})
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Endpoint 6: Recommendation by Associated Works
+@app.route("/api/recommend/associated/<string:title>")
+def api_find_by_association(title):
+    """API: Get recommendations based on novel with associated works."""
+    query = """
+    MATCH (n1:Novel {name: $title})-[:AssociatedWith]-(n2:Novel)
+    WHERE n1 <> n2
+    RETURN DISTINCT n2.name AS name, n2.year AS year, n2.language AS language
+    LIMIT 10
+    """
+
+    try:
+        results = _run_query(query, {"title": title})
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # --- Run the Server ---
 if __name__ == "__main__":
