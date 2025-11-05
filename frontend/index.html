@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebNovel Recommendation Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50">
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm"></div>
+
+    <!-- Main Container -->
+    <div class="min-h-screen">
+        
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="container mx-auto max-w-7xl px-4 py-6">
+                <h1 class="text-3xl font-bold text-gray-900">📚 WebNovel Recommendation Engine</h1>
+                <p class="text-gray-600 mt-1">Discover and explore web novels from our database</p>
+            </div>
+        </header>
+
+        <div class="container mx-auto max-w-7xl px-4 py-8">
+            
+            <!-- Navigation Tabs -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                <div class="flex border-b border-gray-200">
+                    <button id="tab-dashboard" class="tab-button flex-1 px-6 py-4 text-sm font-medium text-teal-600 border-b-2 border-teal-600 bg-teal-50">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                            Dashboard
+                        </div>
+                    </button>
+                    <button id="tab-search" class="tab-button flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Search Novels
+                        </div>
+                    </button>
+                    <button id="tab-recommend" class="tab-button flex-1 px-6 py-4 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                            Recommendations
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-content">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Top Genres Chart -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Genres</h3>
+                        <div class="chart-container">
+                            <canvas id="top-genres-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top Tags Chart -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 20 Tags</h3>
+                        <div class="chart-container">
+                            <canvas id="top-tags-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Novels per Year Chart -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-2">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Novel Releases Over Time</h3>
+                        <div class="chart-container">
+                            <canvas id="novels-per-year-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search View -->
+            <div id="view-search" class="view-content hidden">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Search Novels</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Search by Title -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">By Title</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="search-title-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="e.g., Solo Leveling">
+                                <button id="search-title-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Search</button>
+                            </div>
+                        </div>
+
+                        <!-- Search by Genre -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">By Genres</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="search-genre-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Action;Fantasy">
+                                <button id="search-genre-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Search</button>
+                            </div>
+                        </div>
+
+                        <!-- Search by Tag -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">By Tags</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="search-tag-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Level Up;Monsters">
+                                <button id="search-tag-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Results -->
+                <div id="search-results" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900"><span id="search-results-count">0</span> Results Found</h3>
+                    </div>
+                    <div id="search-results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+                    <div id="search-pagination" class="flex justify-center"></div>
+                </div>
+            </div>
+
+            <!-- Recommendations View -->
+            <div id="view-recommend" class="view-content hidden">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Get Recommendations</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- By Genre -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Similar Genres</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="recommend-genre-input" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Novel title">
+                                <button id="recommend-genre-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Get</button>
+                            </div>
+                        </div>
+
+                        <!-- By Tag -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Similar Tags</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="recommend-tag-input" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Novel title">
+                                <button id="recommend-tag-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Get</button>
+                            </div>
+                        </div>
+
+                        <!-- By Author -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Same Author</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="recommend-author-input" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Novel title">
+                                <button id="recommend-author-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Get</button>
+                            </div>
+                        </div>
+
+                        <!-- By Association -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Associated Works</label>
+                            <div class="flex flex-col gap-2">
+                                <input type="text" id="recommend-associated-input" class="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Novel title">
+                                <button id="recommend-associated-btn" class="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors">Get</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation Results -->
+                <div id="recommend-results" class="hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900"><span id="recommend-results-count">0</span> Recommendations</h3>
+                    </div>
+                    <div id="recommend-results-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+                    <div id="recommend-pagination" class="flex justify-center"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentView = 'dashboard';
+        let searchResults = [];
+        let recommendResults = [];
+        let currentSearchPage = 1;
+        let currentRecommendPage = 1;
+        const itemsPerPage = 9;
+
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabId = e.currentTarget.id.replace('tab-', '');
+                switchView(tabId);
+            });
+        });
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                const btnView = btn.id.replace('tab-', '');
+                if (btnView === view) {
+                    btn.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
+                    btn.classList.add('text-teal-600', 'border-b-2', 'border-teal-600', 'bg-teal-50');
+                } else {
+                    btn.classList.remove('text-teal-600', 'border-b-2', 'border-teal-600', 'bg-teal-50');
+                    btn.classList.add('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
+                }
+            });
+
+            // Update views
+            document.querySelectorAll('.view-content').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+
+            // Load dashboard charts if switching to dashboard
+            if (view === 'dashboard') {
+                initDashboard();
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+                type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            } text-white`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Create novel card
+        function createNovelCard(novel) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow';
+            
+            card.innerHTML = `
+                <h4 class="font-semibold text-gray-900 mb-2 line-clamp-2">${novel.title || 'Untitled'}</h4>
+                <p class="text-sm text-gray-600 mb-2">by ${novel.author || 'Unknown'}</p>
+                ${novel.genres ? `<div class="flex flex-wrap gap-1 mb-2">${novel.genres.split(';').slice(0, 3).map(g => `<span class="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">${g.trim()}</span>`).join('')}</div>` : ''}
+                ${novel.rating ? `<div class="text-sm text-gray-500">Rating: ${novel.rating}/5</div>` : ''}
+            `;
+            
+            return card;
+        }
+
+        // Pagination
+        function createPagination(totalItems, currentPage, container, onPageChange) {
+            container.innerHTML = '';
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            if (totalPages <= 1) return;
+
+            const pagination = document.createElement('div');
+            pagination.className = 'flex gap-2';
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '← Prev';
+            prevBtn.className = `px-4 py-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.addEventListener('click', () => onPageChange(currentPage - 1));
+            pagination.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.textContent = i;
+                    pageBtn.className = `px-4 py-2 rounded-md ${i === currentPage ? 'bg-teal-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+                    pageBtn.addEventListener('click', () => onPageChange(i));
+                    pagination.appendChild(pageBtn);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.className = 'px-2 py-2 text-gray-500';
+                    pagination.appendChild(dots);
+                }
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next →';
+            nextBtn.className = `px-4 py-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`;
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.addEventListener('click', () => onPageChange(currentPage + 1));
+            pagination.appendChild(nextBtn);
+
+            container.appendChild(pagination);
+        }
+
+        // Display search results
+        function displaySearchResults(page = 1) {
+            currentSearchPage = page;
+            const grid = document.getElementById('search-results-grid');
+            const container = document.getElementById('search-results');
+            const countEl = document.getElementById('search-results-count');
+            
+            grid.innerHTML = '';
+            countEl.textContent = searchResults.length;
+            container.classList.remove('hidden');
+
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageResults = searchResults.slice(start, end);
+
+            pageResults.forEach(novel => {
+                grid.appendChild(createNovelCard(novel));
+            });
+
+            createPagination(searchResults.length, page, document.getElementById('search-pagination'), displaySearchResults);
+        }
+
+        // Display recommendations
+        function displayRecommendations(page = 1) {
+            currentRecommendPage = page;
+            const grid = document.getElementById('recommend-results-grid');
+            const container = document.getElementById('recommend-results');
+            const countEl = document.getElementById('recommend-results-count');
+            
+            grid.innerHTML = '';
+            countEl.textContent = recommendResults.length;
+            container.classList.remove('hidden');
+
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageResults = recommendResults.slice(start, end);
+
+            pageResults.forEach(novel => {
+                grid.appendChild(createNovelCard(novel));
+            });
+
+            createPagination(recommendResults.length, page, document.getElementById('recommend-pagination'), displayRecommendations);
+        }
+
+        // Mock novel names for realistic demo
+        const mockNovelNames = [
+            'Solo Leveling', 'The Beginning After The End', 'Omniscient Reader\'s Viewpoint',
+            'Shadow Slave', 'Lord of the Mysteries', 'Reverend Insanity',
+            'Mother of Learning', 'Cradle: Unsouled', 'He Who Fights With Monsters',
+            'The Primal Hunter', 'Defiance of the Fall', 'Azarinth Healer',
+            'Second Life Ranker', 'The Legendary Mechanic', 'Overgeared',
+            'The Novel\'s Extra', 'Trash of the Count\'s Family', 'ORV',
+            'Mushoku Tensei', 'Re:Zero', 'Overlord', 'That Time I Got Reincarnated',
+            'Rising of the Shield Hero', 'Sword Art Online', 'Demon Slayer',
+            'Tower of God', 'God of Highschool', 'Noblesse', 'The Gamer',
+            'Dungeon Defense', 'Dungeon Hunter', 'Everyone Else is a Returnee'
+        ];
+
+        const mockAuthors = [
+            'Chugong', 'TurtleMe', 'Sing-Shong', 'Guiltythree',
+            'Cuttlefish That Loves Diving', 'Gu Zhen Ren', 'Nobody103',
+            'Will Wight', 'Shirtaloon', 'Zogarth', 'JF Brink',
+            'Rhaegar', 'Nong Nong', 'Qi Peijia', 'Park Saenal',
+            'Jee Gab Song', 'Yoo Ryeo Han', 'Rifujin na Magonote',
+            'Tappei Nagatsuki', 'Kugane Maruyama', 'Fuse', 'Aneko Yusagi',
+            'Reki Kawahara', 'Koyoharu Gotouge', 'SIU', 'Yongje Park'
+        ];
+
+        function getRandomNovel(index) {
+            const nameIndex = index % mockNovelNames.length;
+            const authorIndex = index % mockAuthors.length;
+            return {
+                title: mockNovelNames[nameIndex],
+                author: mockAuthors[authorIndex],
+                genres: ['Action', 'Fantasy', 'Adventure', 'Sci-Fi', 'Romance', 'Mystery', 'Horror'].slice(0, Math.floor(Math.random() * 3) + 2).join(';'),
+                rating: (Math.random() * 2 + 3).toFixed(1)
+            };
+        }
+
+        // Search handlers
+        document.getElementById('search-title-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-title-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a title', 'error');
+                return;
+            }
+            searchResults = Array.from({length: 25}, (_, i) => getRandomNovel(i));
+            displaySearchResults(1);
+            showNotification(`Found ${searchResults.length} novels`, 'success');
+        });
+
+        document.getElementById('search-genre-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-genre-input').value.trim();
+            if (!query) {
+                showNotification('Please enter genres', 'error');
+                return;
+            }
+            searchResults = Array.from({length: 18}, (_, i) => ({
+                ...getRandomNovel(i),
+                genres: query
+            }));
+            displaySearchResults(1);
+            showNotification(`Found ${searchResults.length} novels`, 'success');
+        });
+
+        document.getElementById('search-tag-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-tag-input').value.trim();
+            if (!query) {
+                showNotification('Please enter tags', 'error');
+                return;
+            }
+            searchResults = Array.from({length: 22}, (_, i) => getRandomNovel(i));
+            displaySearchResults(1);
+            showNotification(`Found ${searchResults.length} novels`, 'success');
+        });
+
+        // Recommendation handlers
+        document.getElementById('recommend-genre-btn').addEventListener('click', () => {
+            const query = document.getElementById('recommend-genre-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a novel title', 'error');
+                return;
+            }
+            recommendResults = Array.from({length: 15}, (_, i) => getRandomNovel(i + 5));
+            displayRecommendations(1);
+            showNotification(`Found ${recommendResults.length} recommendations`, 'success');
+        });
+
+        document.getElementById('recommend-tag-btn').addEventListener('click', () => {
+            const query = document.getElementById('recommend-tag-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a novel title', 'error');
+                return;
+            }
+            recommendResults = Array.from({length: 20}, (_, i) => getRandomNovel(i + 8));
+            displayRecommendations(1);
+            showNotification(`Found ${recommendResults.length} recommendations`, 'success');
+        });
+
+        document.getElementById('recommend-author-btn').addEventListener('click', () => {
+            const query = document.getElementById('recommend-author-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a novel title', 'error');
+                return;
+            }
+            const sameAuthor = mockAuthors[Math.floor(Math.random() * mockAuthors.length)];
+            recommendResults = Array.from({length: 8}, (_, i) => ({
+                ...getRandomNovel(i + 12),
+                author: sameAuthor
+            }));
+            displayRecommendations(1);
+            showNotification(`Found ${recommendResults.length} recommendations`, 'success');
+        });
+
+        document.getElementById('recommend-associated-btn').addEventListener('click', () => {
+            const query = document.getElementById('recommend-associated-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a novel title', 'error');
+                return;
+            }
+            recommendResults = Array.from({length: 12}, (_, i) => getRandomNovel(i + 15));
+            displayRecommendations(1);
+            showNotification(`Found ${recommendResults.length} recommendations`, 'success');
+        });
+
+        // Dashboard initialization
+        function initDashboard() {
+            // Mock data for charts
+            const genresCtx = document.getElementById('top-genres-chart');
+            const tagsCtx = document.getElementById('top-tags-chart');
+            const yearsCtx = document.getElementById('novels-per-year-chart');
+
+            new Chart(genresCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Fantasy', 'Action', 'Romance', 'Sci-Fi', 'Mystery', 'Horror', 'Adventure', 'Drama', 'Comedy', 'Thriller'],
+                    datasets: [{
+                        label: 'Number of Novels',
+                        data: [450, 380, 320, 280, 250, 220, 200, 180, 150, 130],
+                        backgroundColor: 'rgba(20, 184, 166, 0.8)',
+                        borderColor: 'rgba(20, 184, 166, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            new Chart(tagsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Level Up', 'Magic', 'Monsters', 'System', 'Dungeons', 'Guilds', 'Reincarnation', 'OP MC', 'Weak to Strong', 'Game Elements', 'Martial Arts', 'Cultivation', 'Harem', 'Kingdom Building', 'Slice of Life', 'Time Travel', 'Revenge', 'Academy', 'Transmigration', 'Isekai'],
+                    datasets: [{
+                        label: 'Number of Novels',
+                        data: [320, 300, 280, 270, 250, 240, 230, 220, 210, 200, 190, 180, 170, 160, 150, 140, 130, 120, 110, 100],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            new Chart(yearsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                    datasets: [{
+                        label: 'Novels Released',
+                        data: [50, 80, 120, 180, 250, 320, 400, 480, 550, 600],
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        initDashboard();
+    </script>
+</body>
+</html>
