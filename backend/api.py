@@ -1,17 +1,22 @@
-# File location: backend/api.py
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from neo4j import GraphDatabase
-import atexit # To close the connection when the server stops
+import atexit 
 
-# 1. Import your global variables (from the root folder)
 try:
     from globalVars import URI, AUTH, DBNAME
 except ImportError:
     print("Error: Could not import globalVars.py.")
     print("Ensure you are running from the root folder: python -m backend.api")
     exit()
+
+try:
+    from .llm_chain import get_llm_response
+    print("Successfully imported LLM logic from llm_chain.py")
+except ImportError as e:
+    print(f"CRITICAL: Failed to import 'llm_chain.py'. Error: {e}")
+    print("LLM Chat (AI) tab will not work.")
+    get_llm_response = None
 
 # 2. Set up the Flask application
 app = Flask(__name__)
@@ -57,12 +62,16 @@ def home():
 def api_search_by_title(title_search):
     """API for searching novels by title (partial match)."""
     query = """
-    MATCH (n:Novel) WHERE n.name CONTAINS $title
+    MATCH (n:Novel)
+    WHERE n.name CONTAINS $title
     RETURN DISTINCT n.name AS title, n.year AS year, n.language AS language
     LIMIT 10
     """
     try:
         results = _run_query(query, {"title": title_search})
+        if not results:
+            print(f"\nNo novel found matching '{title_search}'.")
+            return jsonify([])  # Return empty list if no results
         return jsonify(results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -93,7 +102,7 @@ def api_find_by_author(title):
     query = """
     MATCH (n1:Novel {name: $title})-[:WrittenBy]->(a:Author)<-[:WrittenBy]-(n2:Novel)
     WHERE n1 <> n2
-    RETURN DISTINCT n2.name AS recommendation, a.name AS reason
+    RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
     LIMIT 10
     """
     try:
@@ -107,14 +116,12 @@ def api_find_by_author(title):
 def api_find_by_genre(title):
     """API: Get recommendations based on novel title -> similar genres (min 2)."""
     query = """
-    MATCH (n1:Novel {name: $title})-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
+    MATCH (n1:Novel {{name: $title}})-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
     WHERE n1 <> n2
     WITH n2, count(g) AS sharedFeatures
     WHERE sharedFeatures >= 2
-    RETURN DISTINCT n2.name AS recommendation, 
-            'Shared ' + toString(sharedFeatures) + ' genres' AS reason, 
-            sharedFeatures
-    ORDER BY sharedFeatures DESC LIMIT 10
+    RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+    LIMIT 10
     """
     try:
         results = _run_query(query, {"title": title})
@@ -177,6 +184,46 @@ def api_stats_novels_per_year():
         return jsonify(valid_results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/llm-query", methods=["POST"])
+def api_llm_query():
+    
+    # 1. Pastikan modul LLM berhasil diimpor
+    if get_llm_response is None:
+        return jsonify({"error": "LLM (AI) functionality is not configured on this server."}), 503 
+
+    # 2. Ambil pertanyaan dari frontend
+    try:
+        data = request.get_json()
+        question = data['question']
+        if not question:
+            return jsonify({"error": "Question cannot be empty."}), 400
+    except Exception:
+        return jsonify({"error": "Invalid JSON body. 'question' key is missing."}), 400
+
+    print(f"[LLM Gateway] Menerima pertanyaan: {question}")
+
+    # 3. Panggil Logika LLM
+    try:
+        # 'llm_result' adalah dict: {'answer': '...', 'raw_data': [...], 'error': '...'}
+        llm_result = get_llm_response(question)
+
+        if llm_result.get('error'):
+            return jsonify({
+                "error": True,
+                "answer": llm_result.get('answer', 'An unknown error occurred in the AI chain.')
+            }), 400 
+
+        # 'raw_data' adalah list: [{'title': '...', 'year': '...'}, ...]
+        clean_data = llm_result.get('raw_data', [])
+        
+        print(f"[LLM Gateway] Mengirim {len(clean_data)} hasil ke frontend.")
+
+        return jsonify(clean_data) 
+
+    except Exception as e:
+        print(f"[LLM Gateway] CRITICAL ERROR: {e}")
+        return jsonify({"error": f"An internal server error occurred: {e}"}), 500
 
 
 # --- Run the Server ---
