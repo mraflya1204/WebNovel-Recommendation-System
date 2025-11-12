@@ -31,10 +31,14 @@
 ## Instruction
 Requirement:
 - Neo4j
+- Neo4j APOC Plugin
 - Python
 - Neo4j Python Package (use `pip install neo4j`)
+- LangChain Python Package (use `pip install langchain`)
+- LangChain-Neo4j Package (use `pip install langchain_neo4j`)
+- LangChain-GoogleGenAI Package (use `pip install langchain_google_genai`)
 
-Steps:
+Constructor Steps:
 - Create a Neo4j database within your local instance
 - Run the instance
 - Edit `globalVars.py` with the corresponding information:
@@ -45,6 +49,12 @@ Steps:
 - Run `constructor.py` to initialize the database. It will take a while as there is ~11k rows of Novel information
 - After finishing, you can see your instance for the result
 - Use `CLI.py` for playground
+
+Running the Web Application:
+- Run the Neo4j instance
+- On root folder, run `python -m backend.api`
+- Serve `index.html` 
+- Application is now ready to use in `localhost:5500`
 
 ## Samples
 ![RelatedWorks](https://github.com/user-attachments/assets/1e889b6c-6574-4c67-8ce5-b77da7c27c30)
