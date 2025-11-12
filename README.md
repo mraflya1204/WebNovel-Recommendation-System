@@ -58,6 +58,9 @@ Running the Web Application:
 
 ## Samples
 ![Dashboard](assets/images/Dashboard.png)
+
 ![Search](assets/images/Search.png)
+
 ![Recommendations](assets/images/Recommendations.png)
+
 ![Chatbot](assets/images/AIChatbot.png)

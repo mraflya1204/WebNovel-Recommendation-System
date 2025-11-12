@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 import csv
-from helper import *
+from constructor.helper import *
 from globalVars import *
 
 # Defined in globalVars.py in my pc because there's password, change the values as needed
