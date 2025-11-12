@@ -57,6 +57,7 @@ Running the Web Application:
 - Application is now ready to use in `localhost:5500`
 
 ## Samples
-![RelatedWorks](https://github.com/user-attachments/assets/1e889b6c-6574-4c67-8ce5-b77da7c27c30)
-
-![RecommendedTags](https://github.com/user-attachments/assets/bc53fad8-deee-4faf-8e9b-7bd57b798a37)
+![Dashboard](assets/images/Dashboard.png)
+![Search](assets/images/Search.png)
+![Recommendations](assets/images/Recommendations.png)
+![Chatbot](assets/images/AIChatbot.png)
