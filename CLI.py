@@ -1,4 +1,3 @@
-import sys
 from globalVars import *
 from neo4j import GraphDatabase
 
@@ -22,7 +21,7 @@ def print_results(records, title):
 
 def search_by_title(session):
     """Search for a novel by its title."""
-    title = input("Enter a novel title to search for (can be partial): ").strip()
+    title = input("Enter a novel title to search for: ").strip()
     if not title:
         print("Search cannot be empty.")
         return
@@ -157,7 +156,7 @@ def find_by_association(session):
         print("Hint: Make sure the novel title is spelled exactly correct.")
 
 def find_by_genre(session):
-    """Find novels with at least 2 shared genres."""
+    """Find novels with at least 3 shared genres."""
     title = input("Enter a novel title to find works with similar genres: ").strip()
     if not title:
         return
@@ -166,7 +165,7 @@ def find_by_genre(session):
     MATCH (n1:Novel {name: $title})-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
     WHERE n1 <> n2
     WITH n2, count(g) AS sharedFeatures
-    WHERE sharedFeatures >= 2
+    WHERE sharedFeatures >= 3
     RETURN DISTINCT n2.name AS recommendation, 
             'Shared ' + toString(sharedFeatures) + ' genres' AS reason, 
             sharedFeatures
@@ -176,13 +175,13 @@ def find_by_genre(session):
     
     try:
         records = session.execute_read(lambda tx: list(tx.run(query, title=title)))
-        print_results(records, f"Works with similar genres to {title} (min. 2)")
+        print_results(records, f"Works with similar genres to {title}")
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Hint: Make sure the novel title is spelled exactly correct.")
 
 def find_by_tag(session):
-    """Find novels with at least 4 shared tags."""
+    """Find novels with at least 6 shared tags."""
     title = input("Enter a novel title to find works with similar tags: ").strip()
     if not title:
         return
@@ -191,7 +190,7 @@ def find_by_tag(session):
     MATCH (n1:Novel {name: $title})-[:HasTag]->(t:Tag)<-[:HasTag]-(n2:Novel)
     WHERE n1 <> n2
     WITH n2, count(t) AS sharedFeatures
-    WHERE sharedFeatures >= 4
+    WHERE sharedFeatures >= 6
     RETURN DISTINCT n2.name AS recommendation, 
             'Shared ' + toString(sharedFeatures) + ' tags' AS reason, 
             sharedFeatures
@@ -201,7 +200,7 @@ def find_by_tag(session):
     
     try:
         records = session.execute_read(lambda tx: list(tx.run(query, title=title)))
-        print_results(records, f"Works with similar tags to {title} (min. 4)")
+        print_results(records, f"Works with similar tags to {title}c")
     except Exception as e:
         print(f"An error occurred: {e}")
         print("Hint: Make sure the novel title is spelled exactly correct.")
@@ -214,9 +213,9 @@ def print_menu():
     print("2. Search by Genres (must match all)")
     print("3. Search by Tags (must match all)")
     print("4. Recommend: By same author")
-    print("5. Recommend: Associated works (sequels/prequels)")
-    print("6. Recommend: By similar genre (shares 2+)")
-    print("7. Recommend: By similar tags (shares 4+)")
+    print("5. Recommend: Associated works")
+    print("6. Recommend: By similar genre")
+    print("7. Recommend: By similar tags")
     print("8. Exit")
     print("-----------------------------------")
 
@@ -237,11 +236,11 @@ def main():
                 choice = input("Enter your choice (1-8): ")
                 
                 if choice == '1':
-                    search_by_title(session)  # Renamed
+                    search_by_title(session)  
                 elif choice == '2':
-                    search_by_genre(session)  # NEW
+                    search_by_genre(session)  
                 elif choice == '3':
-                    search_by_tag(session)    # NEW
+                    search_by_tag(session)    
                 elif choice == '4':
                     find_by_author(session)
                 elif choice == '5':
@@ -250,11 +249,10 @@ def main():
                     find_by_genre(session)
                 elif choice == '7':
                     find_by_tag(session)
-                elif choice == '8': # MODIFIED
+                elif choice == '8': 
                     print("Exiting...")
                     break
                 else:
-                    # MODIFIED: Updated range
                     print("Invalid choice. Please enter a number from 1 to 8.")
 
 if __name__ == "__main__":
