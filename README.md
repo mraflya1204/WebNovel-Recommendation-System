@@ -1,5 +1,18 @@
+<div align="center">
 # Web Novel Recommendation System using Neo4j Graph Database
-Final Project for EF234505 - Knowledge Based Systems Engineering (I) 
+
+<em>Final Project for EF234505 - Knowledge Based Systems Engineering (I)</em>
+
+<!-- BADGES -->
+<img src="https://img.shields.io/github/last-commit/reinoyk/Pico-Park-Clone?style=flat&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+<img src="https://img.shields.io/github/languages/top/reinoyk/Pico-Park-Clone?style=flat&color=0080ff" alt="repo-top-language">
+<img src="https://img.shields.io/github/languages/count/reinoyk/Pico-Park-Clone?style=flat&color=0080ff" alt="repo-language-count">
+
+<em>Built with the tools and technologies:</em>
+
+<img src="https://img.shields.io/badge/Markdown-000000.svg?style=flat&logo=Markdown&logoColor=white" alt="Markdown">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?style=flat&logo=JavaScript&logoColor=black" alt="JavaScript">
+<img src="https://img.shields.io/badge/Python-3776AB.svg?style=flat&logo=Python&logoColor=white" alt="Python">
 
 |    NRP     |      Name      |
 | :--------: | :------------: |
@@ -8,6 +21,9 @@ Final Project for EF234505 - Knowledge Based Systems Engineering (I)
 | 5025231075 | Reino Yuris Kusumanegara |
 | 5025231161 | Muhammad Rizqy Hidayat |
 | 5025231011 | Fazle Robby Pratama |
+
+</div>
+<br>
 
 ## Instruction
 Requirement:
