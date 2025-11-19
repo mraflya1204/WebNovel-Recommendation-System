@@ -25,7 +25,7 @@
 </div>
 
 ## Instruction
-Requirement:
+Requirements:
 - Neo4j
 - Neo4j APOC Plugin
 - Python
