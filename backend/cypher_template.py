@@ -19,9 +19,9 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         WHERE n1 <> n2
         WITH n2, count(g) AS sharedFeatures
         WHERE sharedFeatures >= 2
+        ORDER BY sharedFeatures DESC
         RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
                         'Shared ' + toString(sharedFeatures) + ' genres' AS reason
-        ORDER BY sharedFeatures DESC
         LIMIT 10
         ```
 
@@ -35,9 +35,9 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         WHERE n1 <> n2
         WITH n2, count(t) AS sharedFeatures
         WHERE sharedFeatures >= 2
+        ORDER BY sharedFeatures DESC
         RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
                         'Shared ' + toString(sharedFeatures) + ' tags' AS reason
-        ORDER BY sharedFeatures DESC
         LIMIT 10
         ```
 
