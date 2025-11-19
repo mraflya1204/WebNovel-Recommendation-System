@@ -82,6 +82,7 @@ def get_llm_response(question: str):
             # Ambil raw_data
             raw_data = []
             intermediate_steps = response.get('intermediate_steps', [])
+            generated_cypher = "Could not extract Cypher query."
             
             # intermediate_steps adalah list dengan 2 item:
             # [0] = {'query': '...'}
@@ -90,12 +91,14 @@ def get_llm_response(question: str):
                 context_dict = intermediate_steps[1]
                 if isinstance(context_dict, dict) and 'context' in context_dict:
                     raw_data = context_dict['context']
+                generated_cypher = intermediate_steps[0].get('query', "Query extraction failed.")
                 
             print(f"[LLM Chain] Final raw_data: {raw_data}") 
             
             return {
                 "answer": response.get('result', 'Query executed, but no answer provided.'),
-                "raw_data": raw_data
+                "raw_data": raw_data,
+                "generated_cypher": generated_cypher  
             }
         else:
             return {"error": True, "answer": "LLM chain returned an invalid response structure."}
