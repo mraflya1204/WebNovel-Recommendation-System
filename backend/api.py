@@ -242,11 +242,10 @@ def api_stats_novels_per_year():
         return jsonify(valid_results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+        
 @app.route("/api/llm-query", methods=["POST"])
 def api_llm_query():
-    
-    # 1. Pastikan modul LLM berhasil diimpor
+    """API Endpoint: Handle LLM (AI) queries from frontend."""
     if get_llm_response is None:
         return jsonify({"error": "LLM (AI) functionality is not configured on this server."}), 503 
 
@@ -263,7 +262,7 @@ def api_llm_query():
 
     # 3. Panggil Logika LLM
     try:
-        # 'llm_result' adalah dict: {'answer': '...', 'raw_data': [...], 'error': '...'}
+        # 'llm_result' sekarang punya 3 key: {'answer': '...', 'raw_data': [...], 'generated_cypher': '...'}
         llm_result = get_llm_response(question)
 
         if llm_result.get('error'):
@@ -272,12 +271,21 @@ def api_llm_query():
                 "answer": llm_result.get('answer', 'An unknown error occurred in the AI chain.')
             }), 400 
 
-        # 'raw_data' adalah list: [{'title': '...', 'year': '...'}, ...]
+        # Ekstrak data
         clean_data = llm_result.get('raw_data', [])
+        generated_cypher = llm_result.get('generated_cypher', 'No query generated')
+        ai_answer = llm_result.get('answer', 'Query executed successfully')
         
         print(f"[LLM Gateway] Mengirim {len(clean_data)} hasil ke frontend.")
 
-        return jsonify(clean_data) 
+        return jsonify({
+            "results": clean_data,           # Data novel
+            "thinking": {
+                "cypher": generated_cypher,  # Cypher query yang di-generate
+                "answer": ai_answer,         # Penjelasan dari AI
+                "question": question         # Pertanyaan user
+            }
+        })
 
     except Exception as e:
         print(f"[LLM Gateway] CRITICAL ERROR: {e}")
