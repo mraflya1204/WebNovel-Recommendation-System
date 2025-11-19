@@ -1,21 +1,18 @@
 <div id="top">
-  
+
+<!-- HEADER STYLE: CLASSIC -->
 <div align="center">
-  
+
 # Web Novel Recommendation System using Neo4j Graph Database
 
 <em>Final Project for EF234505 - Knowledge Based Systems Engineering (I)</em>
 
-<!-- BADGES -->
-<img src="https://img.shields.io/github/last-commit/reinoyk/Pico-Park-Clone?style=flat&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-<img src="https://img.shields.io/github/languages/top/reinoyk/Pico-Park-Clone?style=flat&color=0080ff" alt="repo-top-language">
-<img src="https://img.shields.io/github/languages/count/reinoyk/Pico-Park-Clone?style=flat&color=0080ff" alt="repo-language-count">
-
 <em>Built with the tools and technologies:</em>
-
-<img src="https://img.shields.io/badge/Markdown-000000.svg?style=flat&logo=Markdown&logoColor=white" alt="Markdown">
-<img src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?style=flat&logo=JavaScript&logoColor=black" alt="JavaScript">
-<img src="https://img.shields.io/badge/Python-3776AB.svg?style=flat&logo=Python&logoColor=white" alt="Python">
+<!-- BADGES -->
+<img src="https://img.shields.io/badge/PHP-777BB4.svg?style=flat&logo=php&logoColor=white" alt="PHP">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E.svg?style=flat&logo=javascript&logoColor=black" alt="JavaScript">
+<img src="https://img.shields.io/badge/Neo4j-4DB33D.svg?style=flat&logo=neo4j&logoColor=white" alt="Neo4j">
+<img src="https://img.shields.io/badge/LangChain-0052CC.svg?style=flat&logo=langchain&logoColor=white" alt="LangChain">
 
 |    NRP     |      Name      |
 | :--------: | :------------: |
@@ -26,7 +23,6 @@
 | 5025231011 | Fazle Robby Pratama |
 
 </div>
-<br>
 
 ## Instruction
 Requirement:
