@@ -47,6 +47,7 @@ Constructor Steps:
 - Use `CLI.py` for playground
 
 Running the Web Application:
+- Add gemini API key inside a `.env`
 - Run the Neo4j instance
 - On root folder, run `python -m backend.api`
 - Serve `index.html` 
