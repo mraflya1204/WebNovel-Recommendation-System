@@ -35,3 +35,51 @@ body {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+
+/* Gaya untuk Flowchart */
+.flow-step {
+    position: relative;
+    padding-left: 40px; /* Ruang untuk garis */
+}
+/* Garis vertikal di sebelah kiri */
+.flow-step::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 24px; /* Mulai di bawah lingkaran */
+    bottom: 0;
+    width: 2px;
+    background-color: #e2e8f0; /* bg-gray-200 */
+}
+/* Lingkaran untuk setiap langkah */
+.flow-step::after {
+    content: '';
+    position: absolute;
+    left: 6px; /* (12px - (12px/2)) */
+    top: 12px; /* Posisi vertikal lingkaran */
+    width: 14px;
+    height: 14px;
+    background-color: #cbd5e1; /* bg-gray-300 */
+    border-radius: 9999px;
+    z-index: 10;
+}
+/* Ubah warna lingkaran untuk langkah pertama */
+.flow-step:first-child::after {
+    background-color: #0d9488; /* bg-teal-600 */
+}
+/* Hentikan garis di langkah terakhir */
+.flow-step:last-child::before {
+    height: 12px;
+}
+
+/* Animasi untuk memunculkan langkah-langkah */
+.step-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+.step-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+}
