@@ -20,20 +20,24 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         WITH n2, count(g) AS sharedFeatures
         WHERE sharedFeatures >= 2
         RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+                        'Shared ' + toString(sharedFeatures) + ' genres' AS reason
+        ORDER BY sharedFeatures DESC
         LIMIT 10
         ```
 
 2.  Jika pengguna meminta rekomendasi "by tag" atau "similar tag":
     -   Gunakan pola "Shared Features".
     -   Hitung jumlah tag yang sama (`count(t)`).
-    -   HANYA kembalikan novel dengan minimal 4 tag yang sama (`sharedFeatures >= 4`).
+    -   HANYA kembalikan novel dengan minimal 2 tag yang sama (`sharedFeatures >= 2`).
     -   Contoh: "recommend novels like Godsend by tag" ->
         ```cypher
         MATCH (n1:Novel {{name: $title}})-[:HasTag]->(t:Tag)<-[:HasTag]-(n2:Novel)
         WHERE n1 <> n2
         WITH n2, count(t) AS sharedFeatures
-        WHERE sharedFeatures >= 4
+        WHERE sharedFeatures >= 2
         RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+                        'Shared ' + toString(sharedFeatures) + ' tags' AS reason
+        ORDER BY sharedFeatures DESC
         LIMIT 10
         ```
 
@@ -44,6 +48,7 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         MATCH (n1:Novel {{name: $title}})-[:WrittenBy]->(a:Author)<-[:WrittenBy]-(n2:Novel)
         WHERE n1 <> n2
         RETURN DISTINCT n2.name AS title, n2.year AS year, n2.language AS language
+                        'Same author: ' + a.name AS reason
         LIMIT 10
         ```
 
@@ -54,6 +59,7 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         MATCH (n1:Novel {{name: $title}})-[:AssociatedWith]-(n2:Novel)
         WHERE n1 <> n2
         RETURN DISTINCT n2.name AS name, n2.year AS year, n2.language AS language
+                        'Associated work' AS reason
         LIMIT 10
         ```
 
@@ -68,62 +74,74 @@ Ini adalah aturan KETAT. Selalu gunakan pola kueri ini saat diminta.
         ```cypher
         MATCH (a:Author {{name: $authorName}})<-[:WrittenBy]-(n:Novel)
         RETURN n.name AS title, n.year AS year, n.language AS language
+                a.name AS authorName
         LIMIT 20
         ```
 
 7.  Jika pengguna ingin *menyaring* (filter) novel berdasarkan properti spesifik (seperti `status`, `year`, `language`):
     -   Gunakan klausa `WHERE` pada properti node `Novel`.
+    -   (BARU) Selalu lakukan `OPTIONAL MATCH` untuk mendapatkan penulis agar UI bisa menampilkan info lengkap.
     -   Contoh 1: "list all completed novels" ->
         ```cypher
         MATCH (n:Novel)
         WHERE n.status = 'Completed'
-        RETURN n.name AS title, n.year AS year
+        OPTIONAL MATCH (a:Author)<-[:WrittenBy]-(n)
+        RETURN n.name AS title, n.year AS year, n.language AS language,
+               a.name AS authorName  
         LIMIT 20
         ```
     -   Contoh 2: "find novels from 2020" ->
         ```cypher
         MATCH (n:Novel)
         WHERE n.year = '2020'
-        RETURN n.name AS title, n.language AS language
+        OPTIONAL MATCH (a:Author)<-[:WrittenBy]-(n)  
+        RETURN n.name AS title, n.language AS language, n.year AS year,
+               a.name AS authorName  
         LIMIT 20
         ```
     -   Contoh 3: "show me japanese novels" ->
         ```cypher
         MATCH (n:Novel)
         WHERE n.language = 'Japanese'
-        RETURN n.name AS title, n.year AS year
+        OPTIONAL MATCH (a:Author)<-[:WrittenBy]-(n)  
+        RETURN n.name AS title, n.year AS year, n.language AS language,
+               a.name AS authorName  
         LIMIT 20
         ```
-
 8.  Jika pengguna meminta rekomendasi "hybrid", "paling mirip", atau "gabungan" (berdasarkan genre DAN tag):
-    -   Gunakan kueri "Hybrid Score".
+    -   Gunakan kueri "Hybrid Score" yang lebih sederhana.
     -   Hitung **2 poin** untuk setiap genre yang sama.
     -   Hitung **1 poin** untuk setiap tag yang sama.
     -   HANYA kembalikan novel dengan `totalScore >= 5`.
     -   Contoh: "recommend novels most similar to 'Godsend'" ->
-        ```cypher
+```cypher
         MATCH (n1:Novel {{name: $title}})
-        CALL {{
-            WITH n1
-            // Dapatkan novel dengan genre sama (skor 2)
-            MATCH (n1)-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
-            WHERE n1 <> n2
-            RETURN n2, count(g) * 2 AS score
-            UNION
-            // Dapatkan novel dengan tag sama (skor 1)
-            MATCH (n1)-[:HasTag]->(t:Tag)<-[:HasTag]-(n2:Novel)
-            WHERE n1 <> n2
-            RETURN n2, count(t) * 1 AS score
-        }}
-        // Jumlahkan skor
-        WITH n2, sum(score) AS totalScore
-        WHERE totalScore >= 5 // Atur ambang batas minimum
-        RETURN n2.name AS recommendation, 
-               'Similarity Score: ' + toString(totalScore) AS reason, 
-               totalScore
-        ORDER BY totalScore DESC
+        
+        // Hitung skor genre (2 poin per genre)
+        OPTIONAL MATCH (n1)-[:HasGenre]->(g:Genre)<-[:HasGenre]-(n2:Novel)
+        WHERE n1 <> n2
+        WITH n1, n2, count(DISTINCT g) * 2 AS genreScore
+        
+        // Hitung skor tag (1 poin per tag)
+        OPTIONAL MATCH (n1)-[:HasTag]->(t:Tag)<-[:HasTag]-(n2)
+        WHERE n1 <> n2
+        WITH n2, genreScore, count(DISTINCT t) * 1 AS tagScore
+        
+        // Gabungkan skor
+        WITH n2, (genreScore + tagScore) AS totalScore
+        WHERE totalScore >= 5
+        
+        // Hitung similarity score (skala 0-10)
+        // Asumsi max: 10 genre (20 poin) + 10 tag (10 poin) = 30 total
+        WITH n2, totalScore,
+             round(toFloat(totalScore) / 30.0 * 10.0 * 10) / 10.0 AS similarityScore
+        
+        RETURN n2.name AS title, n2.year AS year, n2.language AS language,
+               'Similarity: ' + toString(similarityScore) + '/10' AS reason,
+               similarityScore AS reasonScore
+        ORDER BY similarityScore DESC
         LIMIT 10
-        ```
+    ```
 
 ---
 
